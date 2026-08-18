@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D&D Local — find a table</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="dice">🎲</span>
+        <div>
+          <h1>D&amp;D Local</h1>
+          <p>Find a table near you</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="locateBtn" type="button">Use my location</button>
+        <button id="hostBtn" class="primary" type="button">Host a game</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="filters">
+          <label>
+            System
+            <select id="filterSystem">
+              <option value="">Any</option>
+              <option>5e</option>
+              <option>Pathfinder 2e</option>
+              <option>OSR</option>
+              <option>Homebrew</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>
+            Within
+            <select id="filterMiles">
+              <option value="10">10 miles</option>
+              <option value="25" selected>25 miles</option>
+              <option value="50">50 miles</option>
+              <option value="100">100 miles</option>
+              <option value="9999">Anywhere</option>
+            </select>
+          </label>
+        </div>
+        <div id="gameList" class="game-list"></div>
+      </aside>
+      <main>
+        <div id="map"></div>
+      </main>
+    </div>
+
+    <dialog id="hostDialog">
+      <form id="hostForm" method="dialog">
+        <h2>Host a game</h2>
+        <label>Title <input name="title" required placeholder="Lost Mine of Phandelver" /></label>
+        <label>System
+          <select name="system" required>
+            <option>5e</option>
+            <option>Pathfinder 2e</option>
+            <option>OSR</option>
+            <option>Homebrew</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <div class="row">
+          <label>Date <input name="date" type="date" required /></label>
+          <label>Time <input name="time" type="time" required /></label>
+        </div>
+        <div class="row">
+          <label>Level range <input name="levels" placeholder="1–5" /></label>
+          <label>Open seats <input name="seats" type="number" min="1" max="12" value="3" required /></label>
+        </div>
+        <label>Location
+          <input name="location" required placeholder="Game store, library, or neighborhood" />
+        </label>
+        <p class="hint">Click the map to drop the pin. Exact house addresses are a bad idea.</p>
+        <div class="row">
+          <label>Lat <input name="lat" id="latInput" required readonly /></label>
+          <label>Lng <input name="lng" id="lngInput" required readonly /></label>
+        </div>
+        <label>How to join <input name="contact" required placeholder="Discord, email, store event page" /></label>
+        <label>Notes <textarea name="notes" rows="3" placeholder="New players welcome, bring dice..."></textarea></label>
+        <div class="dialog-actions">
+          <button type="button" id="cancelHost">Cancel</button>
+          <button class="primary" value="submit">Post game</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
