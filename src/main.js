@@ -5,6 +5,58 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
+let currentUser = null;
+
+async function refreshUser() {
+  const { data } = await supabase.auth.getUser();
+  currentUser = data.user || null;
+  const label = document.getElementById("userLabel");
+  const authBtn = document.getElementById("authBtn");
+  if (currentUser) {
+    label.textContent = currentUser.email;
+    authBtn.textContent = "Sign out";
+  } else {
+    label.textContent = "";
+    authBtn.textContent = "Sign in";
+  }
+}
+
+const authDialog = document.getElementById("authDialog");
+document.getElementById("authBtn").onclick = async function () {
+  if (currentUser) {
+    await supabase.auth.signOut();
+    await refreshUser();
+    return;
+  }
+  document.getElementById("authForm").reset();
+  authDialog.show();
+};
+document.getElementById("cancelAuth").onclick = function () { authDialog.close(); };
+
+document.getElementById("signInBtn").onclick = async function (e) {
+  e.preventDefault();
+  const fd = new FormData(document.getElementById("authForm"));
+  const { error } = await supabase.auth.signInWithPassword({
+    email: String(fd.get("email")),
+    password: String(fd.get("password"))
+  });
+  if (error) return alert(error.message);
+  authDialog.close();
+  await refreshUser();
+};
+
+document.getElementById("signUpBtn").onclick = async function () {
+  const fd = new FormData(document.getElementById("authForm"));
+  const { error } = await supabase.auth.signUp({
+    email: String(fd.get("email")),
+    password: String(fd.get("password"))
+  });
+  if (error) return alert(error.message);
+  alert("Account created. Sign in.");
+};
+
+
+
 function escapeHtml(str) {
   return String(str || "").replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -119,6 +171,10 @@ const dialog = document.getElementById("hostDialog");
 const form = document.getElementById("hostForm");
 
 document.getElementById("hostBtn").onclick = function () {
+  if (!currentUser) {
+    authDialog.show();
+    return;
+  }
   pendingPin = null;
   form.reset();
   document.getElementById("latInput").value = "";
@@ -156,7 +212,8 @@ form.addEventListener("submit", async function (e) {
     lat: Number(data.lat),
     lng: Number(data.lng),
     contact: data.contact,
-    notes: data.notes
+    notes: data.notes,
+    user_id: currentUser.id
   };
   const { error } = await supabase.from("games").insert(row);
   if (error) {

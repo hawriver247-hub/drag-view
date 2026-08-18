@@ -20,6 +20,8 @@
         </div>
       </div>
       <div class="actions">
+        <span id="userLabel"></span>
+        <button id="authBtn" type="button">Sign in</button>
         <button id="locateBtn" type="button">Use my location</button>
         <button id="hostBtn" class="primary" type="button">Host a game</button>
       </div>
@@ -91,6 +93,19 @@
         <div class="dialog-actions">
           <button type="button" id="cancelHost">Cancel</button>
           <button class="primary" value="submit">Post game</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="authDialog">
+      <form id="authForm" method="dialog">
+        <h2>Sign in</h2>
+        <label>Email <input name="email" type="email" required /></label>
+        <label>Password <input name="password" type="password" required minlength="6" /></label>
+        <div class="dialog-actions">
+          <button type="button" id="cancelAuth">Cancel</button>
+          <button type="button" id="signUpBtn">Create account</button>
+          <button class="primary" id="signInBtn">Sign in</button>
         </div>
       </form>
     </dialog>
