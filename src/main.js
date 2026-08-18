@@ -132,7 +132,14 @@ function render() {
       '<p class="meta">' + escapeHtml(g.system) + " · " + g.distance.toFixed(1) + " mi</p>" +
       "<p>" + escapeHtml(g.date) + " " + escapeHtml(g.time) + " · " + g.seats + " seats</p>" +
       "<p>" + escapeHtml(g.location) + "</p>";
-    card.onclick = function () {
+    if (currentUser && g.user_id === currentUser.id) {
+      card.innerHTML += '<p><button type="button" class="delete-game">Delete</button></p>';
+    }
+    card.onclick = function (e) {
+      if (e.target && e.target.classList && e.target.classList.contains("delete-game")) {
+        deleteGame(g.id);
+        return;
+      }
       map.setView([g.lat, g.lng], 13);
       marker.openPopup();
     };
@@ -150,6 +157,14 @@ async function loadGames() {
     games = data || [];
   }
   render();
+}
+
+
+async function deleteGame(id) {
+  if (!confirm("Delete this game?")) return;
+  const { error } = await supabase.from("games").delete().eq("id", id);
+  if (error) return alert(error.message);
+  await loadGames();
 }
 
 function setUserPos(lat, lng) {
