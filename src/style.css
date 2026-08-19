@@ -143,3 +143,13 @@ form h2 { margin:0; }
 
 .drop-auth { display:grid; gap:.55rem; margin: 1rem 0; text-align:left; }
 .drop-auth input { width:100%; }
+
+.drop-beta {
+  margin-top: 1rem;
+  padding: 0.7rem 0.8rem;
+  border: 2px solid #c23b22;
+  background: #2a140f;
+  color: #f3e6c8;
+  font-size: 1rem;
+}
+.drop-beta b { color: #d4a017; }
