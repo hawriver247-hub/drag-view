@@ -58,6 +58,14 @@ document.getElementById("signUpBtn").onclick = async function () {
 
 
 
+
+function todayStr() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + m + "-" + day;
+}
+
 function escapeHtml(str) {
   return String(str || "").replace(/[&<>"']/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -102,8 +110,10 @@ function milesBetween(a, b) {
 function filteredGames() {
   const system = document.getElementById("filterSystem").value;
   const miles = Number(document.getElementById("filterMiles").value);
+  const showFull = document.getElementById("showFull") && document.getElementById("showFull").checked;
   return games
     .filter(function (g) { return !system || g.system === system; })
+    .filter(function (g) { return showFull || !g.is_full; })
     .map(function (g) { return Object.assign({}, g, { distance: milesBetween(userPos, g) }); })
     .filter(function (g) { return g.distance <= miles; })
     .sort(function (a, b) { return a.distance - b.distance; });
@@ -164,7 +174,11 @@ function render() {
 }
 
 async function loadGames() {
-  const { data, error } = await supabase.from("games").select("*").order("date");
+  let query = supabase.from("games").select("*").order("date");
+  const showPastEl = document.getElementById("showPast");
+  const showPast = showPastEl && showPastEl.checked;
+  if (!showPast) query = query.gte("date", todayStr());
+  const { data, error } = await query;
   if (error) {
     console.error(error);
     alert("Could not load games: " + error.message);
@@ -316,6 +330,12 @@ document.getElementById("placeSearch").addEventListener("keydown", function (e) 
   }
 });
 
+if (document.getElementById("showPast")) {
+  document.getElementById("showPast").onchange = loadGames;
+}
+if (document.getElementById("showFull")) {
+  document.getElementById("showFull").onchange = render;
+}
 document.getElementById("filterSystem").onchange = render;
 document.getElementById("filterMiles").onchange = render;
 loadGames();
