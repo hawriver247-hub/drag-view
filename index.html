@@ -31,7 +31,20 @@
 
     <div class="layout">
       <aside class="sidebar">
-        <div class="filters">
+                <div class="filters">
+          <div class="search-switch">
+            <button type="button" id="searchModeGame" class="on">Games</button>
+            <button type="button" id="searchModePlayer">Players</button>
+          </div>
+          <label id="gameSearchWrap">
+            Game name
+            <input id="gameSearch" placeholder="Game title" />
+          </label>
+          <label id="playerSearchWrap" hidden>
+            Player search
+            <input id="playerSearch" placeholder="Player name" />
+          </label>
+          <div id="playerResults"></div>
           <label>
             System
             <select id="filterSystem">
@@ -52,33 +65,21 @@
             Within
             <select id="filterMiles">
               <option value="10">10 miles</option>
-              <option value="25" selected>25 miles</option>
+              <option value="25">25 miles</option>
               <option value="50">50 miles</option>
               <option value="100">100 miles</option>
-              <option value="9999">Anywhere</option>
-          </select>
-          </label>
-          <label>
-            <span>Show past games</span>
-            <input id="showPast" type="checkbox" />
-          </label>
-          <span id="__stop"></span>
+              <option value="9999" selected>Anywhere</option>
             </select>
           </label>
-        </div>
-          <label>
-            <span>Show full tables</span>
+          <label class="check">
+            <input id="showPast" type="checkbox" />
+            <span>Show past games</span>
+          </label>
+          <label class="check">
             <input id="showFull" type="checkbox" />
+            <span>Show full tables</span>
           </label>
-          <label>
-            Game name
-            <input id="gameSearch" placeholder="Game title" />
-          </label>
-          <label>
-            Player search
-            <input id="playerSearch" placeholder="Player name" />
-          </label>
-          <div id="playerResults"></div>
+        </div>
         <div id="gameList" class="game-list"></div>
       </aside>
       <main>

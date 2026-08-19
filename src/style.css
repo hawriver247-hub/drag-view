@@ -27,3 +27,18 @@ form h2 { margin:0; }
 .dialog-actions { display:flex; justify-content:flex-end; gap:.5rem; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background:#1c1812; color:var(--ink); }
 @media (max-width:800px) { .layout { grid-template-columns:1fr; grid-template-rows:42vh 1fr; } .sidebar { border-right:0; border-top:1px solid var(--line); } }
+
+
+.search-switch { display:flex; gap:.4rem; }
+.search-switch button { flex:1; }
+.search-switch button.on { background: var(--accent); border-color:#8d2a18; font-weight:600; }
+.filters label.check { display:flex; flex-direction:row; align-items:center; gap:.5rem; }
+.filters label.check input { width:auto; }
+#playerResults p { margin:.2rem 0; font-size:.85rem; }
+
+
+#gameSearchWrap[hidden],
+#playerSearchWrap[hidden],
+.search-wrap-hidden {
+  display: none !important;
+}

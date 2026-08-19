@@ -429,6 +429,28 @@ if (document.getElementById("saveName")) {
   };
 }
 
+
+function setSearchMode(mode) {
+  const gameWrap = document.getElementById("gameSearchWrap");
+  const playerWrap = document.getElementById("playerSearchWrap");
+  const gameBtn = document.getElementById("searchModeGame");
+  const playerBtn = document.getElementById("searchModePlayer");
+  const isGame = mode === "game";
+  if (gameWrap) gameWrap.hidden = !isGame;
+  if (playerWrap) playerWrap.hidden = isGame;
+  if (gameBtn) gameBtn.classList.toggle("on", isGame);
+  if (playerBtn) playerBtn.classList.toggle("on", !isGame);
+  if (isGame) {
+    const ps = document.getElementById("playerSearch");
+    if (ps) ps.value = "";
+    if (typeof renderPlayers === "function") renderPlayers();
+  } else {
+    const gs = document.getElementById("gameSearch");
+    if (gs) gs.value = "";
+  }
+  render();
+}
+
 function renderPlayers() {
   const box = document.getElementById("playerResults");
   if (!box) return;
@@ -549,6 +571,30 @@ if (document.getElementById("playerSearch")) {
 if (document.getElementById("gameSearch")) {
   document.getElementById("gameSearch").addEventListener("input", render);
 }
+setSearchMode("game");
 document.getElementById("filterSystem").onchange = render;
 document.getElementById("filterMiles").onchange = render;
 loadGames();
+
+/* search-switch-final */
+
+
+document.getElementById("searchModeGame").onclick = function () {
+  document.getElementById("gameSearchWrap").hidden = false;
+  document.getElementById("playerSearchWrap").hidden = true;
+  document.getElementById("searchModeGame").classList.add("on");
+  document.getElementById("searchModePlayer").classList.remove("on");
+  document.getElementById("playerSearch").value = "";
+  if (typeof renderPlayers === "function") renderPlayers();
+  render();
+};
+document.getElementById("searchModePlayer").onclick = function () {
+  document.getElementById("gameSearchWrap").hidden = true;
+  document.getElementById("playerSearchWrap").hidden = false;
+  document.getElementById("searchModePlayer").classList.add("on");
+  document.getElementById("searchModeGame").classList.remove("on");
+  document.getElementById("gameSearch").value = "";
+  render();
+};
+document.getElementById("gameSearchWrap").hidden = false;
+document.getElementById("playerSearchWrap").hidden = true;
