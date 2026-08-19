@@ -151,6 +151,10 @@ function filteredGames() {
       return names.some(function (n) { return String(n).toLowerCase().includes(q); });
     })
     .filter(function (g) { return showFull || !g.is_full || isJoined(g); })
+    .filter(function (g) {
+      const showPast = document.getElementById("showPast") && document.getElementById("showPast").checked;
+      return showPast || !g.is_complete || isJoined(g);
+    })
     .map(function (g) { return Object.assign({}, g, { distance: milesBetween(userPos, g) }); })
     .filter(function (g) { return g.distance <= miles; })
     .sort(function (a, b) { return a.distance - b.distance; });
@@ -178,15 +182,22 @@ function render() {
     card.className = "card";
         const hostRate = avgFor(g.user_id);
     const rateText = hostRate ? (" · " + hostRate.avg.toFixed(1) + "★ (" + hostRate.n + ")") : "";
-    card.innerHTML = "<h3>" + escapeHtml(g.title) + (g.is_full ? " (FULL)" : "") + "</h3>" +
+    card.innerHTML = "<h3>" + escapeHtml(g.title) + (g.is_complete ? " (DONE)" : g.is_full ? " (FULL)" : "") + "</h3>" +
       '<p class="meta">' + escapeHtml(g.system) + " · " + g.distance.toFixed(1) + " mi" + rateText + "</p>" +
       "<p>" + escapeHtml(g.date) + " " + escapeHtml(g.time) + " · " + playerCount(g) + "/" + g.seats + " seats" + (isJoined(g) ? " · Joined" : "") + "</p>" +
       "<p>" + escapeHtml(g.location) + "</p>";
     if (currentUser && g.user_id === currentUser.id) {
       card.innerHTML += g.is_full
-        ? '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
-        : '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
-      card.innerHTML += rateBlock(g);
+        ? ('<p><button type="button" class="edit-game">Edit</button> <button type="button" class="reopen-game">Reopen</button> ' +
+           (g.is_complete
+             ? '<button type="button" class="reopen-complete">Reopen game</button> '
+             : '<button type="button" class="complete-game">Game complete</button> ') +
+           '<button type="button" class="delete-game">Delete</button></p>')
+        : ('<p><button type="button" class="edit-game">Edit</button> <button type="button" class="full-game">Mark full</button> ' +
+           (g.is_complete
+             ? '<button type="button" class="reopen-complete">Reopen game</button> '
+             : '<button type="button" class="complete-game">Game complete</button> ') +
+           '<button type="button" class="delete-game">Delete</button></p>');
     } else if (currentUser && isJoined(g)) {
       const mine = myRatingFor(g.user_id);
       card.innerHTML += '<p><button type="button" class="leave-game">Leave</button></p>';
@@ -230,6 +241,14 @@ function render() {
       }
       if (cls && cls.contains("delete-game")) {
         deleteGame(g.id);
+        return;
+      }
+      if (cls && cls.contains("complete-game")) {
+        toggleComplete(g.id, true);
+        return;
+      }
+      if (cls && cls.contains("reopen-complete")) {
+        toggleComplete(g.id, false);
         return;
       }
       if (cls && cls.contains("full-game")) {
@@ -376,6 +395,13 @@ function startEdit(g) {
   if (pendingPin) pendingPin.remove();
   pendingPin = L.marker([g.lat, g.lng]).addTo(map);
   dialog.show();
+}
+
+
+async function toggleComplete(id, done) {
+  const { error } = await supabase.from("games").update({ is_complete: done }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadGames();
 }
 
 async function toggleFull(id, isFull) {
@@ -817,4 +843,31 @@ if (document.getElementById("dropSavePass")) {
 
 supabase.auth.onAuthStateChange(function (event) {
   if (event === "PASSWORD_RECOVERY") showRecoveryForm();
+});
+
+
+/* full-complete-clicks */
+document.addEventListener("click", function (e) {
+  const t = e.target;
+  if (!t || !t.classList) return;
+  const card = t.closest("article.card");
+  if (!card) return;
+  const title = card.querySelector("h3") && card.querySelector("h3").textContent;
+  const g = (games || []).find(function (x) {
+    return title && title.indexOf(x.title) === 0;
+  });
+  if (!g) return;
+  if (t.classList.contains("full-game")) {
+    e.stopPropagation();
+    toggleFull(g.id, true);
+  } else if (t.classList.contains("reopen-game")) {
+    e.stopPropagation();
+    toggleFull(g.id, false);
+  } else if (t.classList.contains("complete-game")) {
+    e.stopPropagation();
+    toggleComplete(g.id, true);
+  } else if (t.classList.contains("reopen-complete")) {
+    e.stopPropagation();
+    toggleComplete(g.id, false);
+  }
 });
