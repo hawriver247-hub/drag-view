@@ -167,6 +167,19 @@ async function deleteGame(id) {
   await loadGames();
 }
 
+
+async function goToPlace() {
+  const q = document.getElementById("placeSearch").value.trim();
+  if (!q) return alert("Type a city or zip.");
+  const res = await fetch("https://photon.komoot.io/api/?limit=1&q=" + encodeURIComponent(q));
+  const data = await res.json();
+  const hit = data.features && data.features[0];
+  if (!hit) return alert("Could not find that place.");
+  const lng = hit.geometry.coordinates[0];
+  const lat = hit.geometry.coordinates[1];
+  setUserPos(lat, lng);
+}
+
 function setUserPos(lat, lng) {
   userPos = { lat: lat, lng: lng };
   youMarker.setLatLng([lat, lng]);
@@ -238,6 +251,15 @@ form.addEventListener("submit", async function (e) {
   if (pendingPin) pendingPin.remove();
   dialog.close();
   await loadGames();
+});
+
+
+document.getElementById("placeBtn").onclick = goToPlace;
+document.getElementById("placeSearch").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    goToPlace();
+  }
 });
 
 document.getElementById("filterSystem").onchange = render;
