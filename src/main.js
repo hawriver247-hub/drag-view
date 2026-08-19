@@ -275,6 +275,7 @@ function render() {
 }
 
 async function loadGames() {
+  await supabase.rpc("cleanup_old_games");
   let query = supabase.from("games").select("*, game_players(user_id)").order("date");
   const showPastEl = document.getElementById("showPast");
   const showPast = showPastEl && showPastEl.checked;
@@ -403,7 +404,7 @@ function startEdit(g) {
 
 
 async function toggleComplete(id, done) {
-  const { error } = await supabase.from("games").update({ is_complete: done }).eq("id", id);
+  const { error } = await supabase.from("games").update({ is_complete: done, completed_at: done ? new Date().toISOString() : null }).eq("id", id);
   if (error) return alert(error.message);
   await loadGames();
 }
