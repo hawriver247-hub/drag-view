@@ -20,6 +20,10 @@ async function refreshUser() {
     authBtn.textContent = "Sign out";
     const meAdmin = profiles.find(function (x) { return x.id === currentUser.id; });
     isAdmin = !!(meAdmin && meAdmin.is_admin);
+    if (meAdmin && meAdmin.is_banned) {
+      alert("This account has been hidden.");
+      supabase.auth.signOut();
+    }
     const nameBtn = document.getElementById("nameBtn");
     if (nameBtn) nameBtn.style.display = "";
     const handle = currentUser.email.split("@")[0];
@@ -200,14 +204,14 @@ function render() {
            '<button type="button" class="delete-game">Delete</button></p>');
     } else if (currentUser && isJoined(g)) {
       const mine = myRatingFor(g.user_id);
-      card.innerHTML += '<p><button type="button" class="leave-game">Leave</button></p>';
+      card.innerHTML += '<p><button type="button" class="leave-game">Leave</button> <button type="button" class="report-game">Report</button></p>';
       card.innerHTML += rateBlock(g);
       card.innerHTML += '<p class="rate-row">Rate host ' +
         [1,2,3,4,5].map(function (n) {
           return '<button type="button" class="rate-host" data-score="' + n + '">' + (mine >= n ? "★" : "☆") + "</button>";
         }).join("") + "</p>";
     } else if (!g.is_full) {
-      card.innerHTML += '<p><button type="button" class="join-game">Join</button></p>';
+      card.innerHTML += '<p><button type="button" class="join-game">Join</button> <button type="button" class="report-game">Report</button></p>';
     }
     card.onclick = function (e) {
       const cls = e.target && e.target.classList;
@@ -659,7 +663,7 @@ async function loadReports() {
   box.innerHTML = rows.length ? rows.map(function (r) {
     const who = nameOf(r.user_id);
     const when = String(r.created_at || "").slice(0, 16).replace("T", " ");
-    return "<article class='card'><h3>" + escapeHtml(r.kind) + "</h3><p class='meta'>" + escapeHtml(who) + " · " + escapeHtml(when) + "</p><p>" + escapeHtml(r.message) + "</p>" + (isAdmin ? "<p><button type='button' class='admin-delete-report' data-id='" + r.id + "'>Delete</button></p>" : "") + "</article>";
+    return "<article class='card'><h3>" + escapeHtml(r.kind) + "</h3><p class='meta'>" + escapeHtml(who) + " · " + escapeHtml(when) + "</p><p>" + escapeHtml(r.message) + "</p>" + (isAdmin ? "<p><button type='button' class='admin-delete-report' data-id='" + r.id + "'>Delete</button> " + (r.target_user_id ? "<button type='button' class='admin-ban-target' data-user='" + r.target_user_id + "'>Hide user</button>" : "") + (r.game_id ? " <button type='button' class='admin-delete-listed' data-game='" + r.game_id + "'>Delete table</button>" : "") + "</p>" : "") + "</article>";
   }).join("") : "<p class='hint'>No reports yet.</p>";
 }
 
@@ -687,7 +691,9 @@ if (document.getElementById("sendReport")) {
     const { error } = await supabase.from("reports").insert({
       user_id: currentUser.id,
       kind: String(fd.get("kind") || "bug"),
-      message: message
+      message: message,
+      game_id: String(fd.get("game_id") || "") || null,
+      target_user_id: String(fd.get("target_user_id") || "") || null
     });
     if (error) return alert(error.message);
     document.getElementById("reportForm").reset();
@@ -883,3 +889,51 @@ if (document.getElementById("dropResend")) {
     alert("Confirmation email sent. Check spam too.");
   };
 }
+
+
+function openReport(kind, gameId, targetId, preset) {
+  if (!currentUser) {
+    if (typeof authDialog !== "undefined" && authDialog) authDialog.show();
+    return;
+  }
+  const form = document.getElementById("reportForm");
+  if (!form) return;
+  form.reset();
+  form.kind.value = kind || "complaint";
+  document.getElementById("reportGameId").value = gameId || "";
+  document.getElementById("reportTargetId").value = targetId || "";
+  if (preset) form.message.value = preset;
+  loadReports();
+  document.getElementById("reportDialog").show();
+}
+
+
+
+document.addEventListener("click", function (e) {
+  const el = e.target;
+  if (!el || !el.classList || !el.classList.contains("report-game")) return;
+  const card = el.closest("article.card");
+  if (!card) return;
+  const title = card.querySelector("h3") && card.querySelector("h3").textContent;
+  const g = (games || []).find(function (x) { return title && title.indexOf(x.title) === 0; });
+  if (!g) return;
+  openReport("complaint", g.id, g.user_id, "Report about: " + g.title);
+});
+
+
+async function adminBanFromReport(userId) {
+  if (!isAdmin || !userId) return;
+  if (!confirm("Hide this user?")) return;
+  const { error } = await supabase.from("profiles").update({ is_banned: true }).eq("id", userId);
+  if (error) return alert(error.message);
+  alert("User hidden.");
+  await loadGames();
+}
+
+
+document.addEventListener("click", function (e) {
+  const el = e.target;
+  if (!el || !el.classList) return;
+  if (el.classList.contains("admin-ban-target")) adminBanFromReport(el.getAttribute("data-user"));
+  if (el.classList.contains("admin-delete-listed")) deleteGame(el.getAttribute("data-game"));
+});
