@@ -128,6 +128,12 @@ function filteredGames() {
   return games
     .filter(function (g) { return !system || g.system === system; })
     .filter(function (g) {
+      const box = document.getElementById("gameSearch");
+      const q = box && box.value ? box.value.trim().toLowerCase() : "";
+      if (!q) return true;
+      return String(g.title || "").toLowerCase().includes(q);
+    })
+    .filter(function (g) {
       const box = document.getElementById("playerSearch");
       const q = box && box.value ? box.value.trim().toLowerCase() : "";
       if (!q) return true;
@@ -538,6 +544,10 @@ if (document.getElementById("playerSearch")) {
     renderPlayers();
     render();
   });
+}
+
+if (document.getElementById("gameSearch")) {
+  document.getElementById("gameSearch").addEventListener("input", render);
 }
 document.getElementById("filterSystem").onchange = render;
 document.getElementById("filterMiles").onchange = render;
