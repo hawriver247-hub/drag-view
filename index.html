@@ -23,6 +23,7 @@
         <span id="userLabel"></span>
         <button id="nameBtn" type="button">Set name</button>
         <button id="authBtn" type="button">Sign in</button>
+        <button id="reportBtn" type="button">Bugs</button>
         <button id="refreshBtn" type="button">Refresh</button>
         <button id="locateBtn" type="button">Use my location</button>
         <button id="hostBtn" class="primary" type="button">Host a game</button>
@@ -146,6 +147,27 @@
         <div class="dialog-actions">
           <button type="button" id="cancelName">Cancel</button>
           <button class="primary" id="saveName">Save</button>
+        </div>
+      </form>
+    </dialog>
+
+
+    <dialog id="reportDialog">
+      <form id="reportForm" method="dialog">
+        <h2>Bugs / complaints</h2>
+        <div id="reportList" class="game-list"></div>
+        <label>Type
+          <select name="kind">
+            <option value="bug">Bug</option>
+            <option value="complaint">Complaint</option>
+          </select>
+        </label>
+        <label>Message
+          <textarea name="message" rows="3" required placeholder="What broke, or what is wrong"></textarea>
+        </label>
+        <div class="dialog-actions">
+          <button type="button" id="cancelReport">Close</button>
+          <button class="primary" id="sendReport">Post</button>
         </div>
       </form>
     </dialog>

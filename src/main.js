@@ -18,6 +18,8 @@ async function refreshUser() {
     const me = profiles.find(function (x) { return x.id === currentUser.id; });
     label.textContent = me ? me.display_name : currentUser.email;
     authBtn.textContent = "Sign out";
+    const meAdmin = profiles.find(function (x) { return x.id === currentUser.id; });
+    isAdmin = !!(meAdmin && meAdmin.is_admin);
     const nameBtn = document.getElementById("nameBtn");
     if (nameBtn) nameBtn.style.display = "";
     const handle = currentUser.email.split("@")[0];
@@ -25,6 +27,7 @@ async function refreshUser() {
   } else {
     label.textContent = "";
     authBtn.textContent = "Sign in";
+    isAdmin = false;
     const nameBtnOff = document.getElementById("nameBtn");
     if (nameBtnOff) nameBtnOff.style.display = "none";
   }
@@ -87,6 +90,7 @@ function escapeHtml(str) {
 let games = [];
 let ratings = [];
 let profiles = [];
+let isAdmin = false;
 let userPos = { lat: 35.7235, lng: -79.4625 };
 let pendingPin = null;
 let markers = [];
@@ -127,6 +131,11 @@ function filteredGames() {
   const showFull = document.getElementById("showFull") && document.getElementById("showFull").checked;
   return games
     .filter(function (g) { return !system || g.system === system; })
+    .filter(function (g) {
+      if (isAdmin) return true;
+      const host = profiles.find(function (p) { return p.id === g.user_id; });
+      return !(host && host.is_banned);
+    })
     .filter(function (g) {
       const box = document.getElementById("gameSearch");
       const q = box && box.value ? box.value.trim().toLowerCase() : "";
@@ -199,6 +208,14 @@ function render() {
         ratePerson(g.user_id, g.id, Number(e.target.getAttribute("data-score")));
         return;
       }
+      if (cls && cls.contains("admin-delete-game")) {
+        deleteGame(g.id);
+        return;
+      }
+      if (cls && cls.contains("admin-ban-host")) {
+        banUser(g.user_id);
+        return;
+      }
       if (cls && cls.contains("join-game")) {
         joinGame(g.id);
         return;
@@ -226,6 +243,10 @@ function render() {
       map.setView([g.lat, g.lng], 13);
       marker.openPopup();
     };
+    
+    if (isAdmin) {
+      card.innerHTML += '<p><button type="button" class="admin-delete-game">Admin delete</button> <button type="button" class="admin-ban-host">Hide user</button></p>';
+    }
     listEl.appendChild(card);
   });
 }
@@ -245,7 +266,7 @@ async function loadGames() {
   }
   const rateRes = await supabase.from("ratings").select("rater_id, ratee_id, score");
   ratings = rateRes.data || [];
-  const profRes = await supabase.from("profiles").select("id, display_name");
+  const profRes = await supabase.from("profiles").select("id, display_name, is_admin, is_banned");
   profiles = profRes.data || [];
   render();
 }
@@ -598,3 +619,75 @@ document.getElementById("searchModePlayer").onclick = function () {
 };
 document.getElementById("gameSearchWrap").hidden = false;
 document.getElementById("playerSearchWrap").hidden = true;
+
+
+async function loadReports() {
+  const box = document.getElementById("reportList");
+  if (!box) return;
+  const { data, error } = await supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(50);
+  if (error) {
+    box.innerHTML = "<p class='hint'>" + escapeHtml(error.message) + "</p>";
+    return;
+  }
+  const rows = data || [];
+  box.innerHTML = rows.length ? rows.map(function (r) {
+    const who = nameOf(r.user_id);
+    const when = String(r.created_at || "").slice(0, 16).replace("T", " ");
+    return "<article class='card'><h3>" + escapeHtml(r.kind) + "</h3><p class='meta'>" + escapeHtml(who) + " · " + escapeHtml(when) + "</p><p>" + escapeHtml(r.message) + "</p>" + (isAdmin ? "<p><button type='button' class='admin-delete-report' data-id='" + r.id + "'>Delete</button></p>" : "") + "</article>";
+  }).join("") : "<p class='hint'>No reports yet.</p>";
+}
+
+const reportDialog = document.getElementById("reportDialog");
+if (document.getElementById("reportBtn")) {
+  document.getElementById("reportBtn").onclick = async function () {
+    await loadReports();
+    reportDialog.show();
+  };
+}
+if (document.getElementById("cancelReport")) {
+  document.getElementById("cancelReport").onclick = function () { reportDialog.close(); };
+}
+if (document.getElementById("sendReport")) {
+  document.getElementById("sendReport").onclick = async function (e) {
+    e.preventDefault();
+    if (!currentUser) {
+      reportDialog.close();
+      authDialog.show();
+      return;
+    }
+    const fd = new FormData(document.getElementById("reportForm"));
+    const message = String(fd.get("message") || "").trim();
+    if (!message) return alert("Write a message.");
+    const { error } = await supabase.from("reports").insert({
+      user_id: currentUser.id,
+      kind: String(fd.get("kind") || "bug"),
+      message: message
+    });
+    if (error) return alert(error.message);
+    document.getElementById("reportForm").reset();
+    await loadReports();
+  };
+}
+
+
+
+async function banUser(userId) {
+  if (!isAdmin) return;
+  if (!confirm("Hide this user and their tables?")) return;
+  const { error } = await supabase.from("profiles").update({ is_banned: true }).eq("id", userId);
+  if (error) return alert(error.message);
+  await loadGames();
+}
+
+
+
+async function deleteReport(id) {
+  const { error } = await supabase.from("reports").delete().eq("id", id);
+  if (error) return alert(error.message);
+  await loadReports();
+}
+document.getElementById("reportList") && document.getElementById("reportList").addEventListener("click", function (e) {
+  if (e.target && e.target.classList.contains("admin-delete-report")) {
+    deleteReport(e.target.getAttribute("data-id"));
+  }
+});
