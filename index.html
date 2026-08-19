@@ -21,6 +21,7 @@
       </div>
       <div class="actions">
         <span id="userLabel"></span>
+        <button id="nameBtn" type="button">Set name</button>
         <button id="authBtn" type="button">Sign in</button>
         <button id="refreshBtn" type="button">Refresh</button>
         <button id="locateBtn" type="button">Use my location</button>
@@ -69,6 +70,11 @@
             <span>Show full tables</span>
             <input id="showFull" type="checkbox" />
           </label>
+          <label>
+            Player search
+            <input id="playerSearch" placeholder="Player name" />
+          </label>
+          <div id="playerResults"></div>
         <div id="gameList" class="game-list"></div>
       </aside>
       <main>
@@ -123,6 +129,18 @@
           <button type="button" id="cancelAuth">Cancel</button>
           <button type="button" id="signUpBtn">Create account</button>
           <button class="primary" id="signInBtn">Sign in</button>
+        </div>
+      </form>
+    </dialog>
+
+
+    <dialog id="nameDialog">
+      <form id="nameForm" method="dialog">
+        <h2>Account name</h2>
+        <label>Name <input name="display_name" required maxlength="24" placeholder="Your table name" /></label>
+        <div class="dialog-actions">
+          <button type="button" id="cancelName">Cancel</button>
+          <button class="primary" id="saveName">Save</button>
         </div>
       </form>
     </dialog>

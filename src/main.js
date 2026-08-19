@@ -15,13 +15,18 @@ async function refreshUser() {
   const label = document.getElementById("userLabel");
   const authBtn = document.getElementById("authBtn");
   if (currentUser) {
-    label.textContent = currentUser.email;
+    const me = profiles.find(function (x) { return x.id === currentUser.id; });
+    label.textContent = me ? me.display_name : currentUser.email;
     authBtn.textContent = "Sign out";
+    const nameBtn = document.getElementById("nameBtn");
+    if (nameBtn) nameBtn.style.display = "";
     const handle = currentUser.email.split("@")[0];
     supabase.from("profiles").upsert({ id: currentUser.id, display_name: handle });
   } else {
     label.textContent = "";
     authBtn.textContent = "Sign in";
+    const nameBtnOff = document.getElementById("nameBtn");
+    if (nameBtnOff) nameBtnOff.style.display = "none";
   }
 }
 
@@ -122,6 +127,14 @@ function filteredGames() {
   const showFull = document.getElementById("showFull") && document.getElementById("showFull").checked;
   return games
     .filter(function (g) { return !system || g.system === system; })
+    .filter(function (g) {
+      const box = document.getElementById("playerSearch");
+      const q = box && box.value ? box.value.trim().toLowerCase() : "";
+      if (!q) return true;
+      const names = [nameOf(g.user_id)];
+      (g.game_players || []).forEach(function (p) { names.push(nameOf(p.user_id)); });
+      return names.some(function (n) { return String(n).toLowerCase().includes(q); });
+    })
     .filter(function (g) { return showFull || !g.is_full || isJoined(g); })
     .map(function (g) { return Object.assign({}, g, { distance: milesBetween(userPos, g) }); })
     .filter(function (g) { return g.distance <= miles; })
@@ -379,6 +392,56 @@ document.getElementById("locateBtn").onclick = function () {
   );
 };
 
+
+const nameDialog = document.getElementById("nameDialog");
+if (document.getElementById("nameBtn")) {
+  document.getElementById("nameBtn").onclick = function () {
+    if (!currentUser) {
+      authDialog.show();
+      return;
+    }
+    const me = profiles.find(function (x) { return x.id === currentUser.id; });
+    const form = document.getElementById("nameForm");
+    form.display_name.value = me ? me.display_name : currentUser.email.split("@")[0];
+    nameDialog.show();
+  };
+}
+if (document.getElementById("cancelName")) {
+  document.getElementById("cancelName").onclick = function () { nameDialog.close(); };
+}
+if (document.getElementById("saveName")) {
+  document.getElementById("saveName").onclick = async function (e) {
+    e.preventDefault();
+    if (!currentUser) return;
+    const name = String(new FormData(document.getElementById("nameForm")).get("display_name") || "").trim();
+    if (!name) return alert("Enter a name.");
+    const { error } = await supabase.from("profiles").upsert({ id: currentUser.id, display_name: name });
+    if (error) return alert(error.message);
+    nameDialog.close();
+    await loadGames();
+    await refreshUser();
+  };
+}
+
+function renderPlayers() {
+  const box = document.getElementById("playerResults");
+  if (!box) return;
+  const q = (document.getElementById("playerSearch") && document.getElementById("playerSearch").value || "").trim().toLowerCase();
+  if (!q) {
+    box.innerHTML = "";
+    return;
+  }
+  const hits = profiles.filter(function (p) {
+    return String(p.display_name || "").toLowerCase().includes(q);
+  });
+  box.innerHTML = hits.length
+    ? hits.map(function (p) {
+        const a = avgFor(p.id);
+        return "<p><b>" + escapeHtml(p.display_name) + "</b> " + (a ? a.avg.toFixed(1) + "★ (" + a.n + ")" : "no ratings") + "</p>";
+      }).join("")
+    : "<p class=\"hint\">No players by that name.</p>";
+}
+
 const dialog = document.getElementById("hostDialog");
 const form = document.getElementById("hostForm");
 
@@ -468,6 +531,13 @@ if (document.getElementById("showFull")) {
 }
 if (document.getElementById("refreshBtn")) {
   document.getElementById("refreshBtn").onclick = function () { loadGames(); };
+}
+
+if (document.getElementById("playerSearch")) {
+  document.getElementById("playerSearch").addEventListener("input", function () {
+    renderPlayers();
+    render();
+  });
 }
 document.getElementById("filterSystem").onchange = render;
 document.getElementById("filterMiles").onchange = render;
