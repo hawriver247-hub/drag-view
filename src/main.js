@@ -2,7 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
 let currentUser = null;
@@ -26,7 +27,11 @@ const authDialog = document.getElementById("authDialog");
 document.getElementById("authBtn").onclick = async function () {
   if (currentUser) {
     await supabase.auth.signOut();
-    await refreshUser();
+    await supabase.auth.onAuthStateChange(function (_event, session) {
+  currentUser = session && session.user ? session.user : null;
+  refreshUser();
+});
+refreshUser();
     return;
   }
   document.getElementById("authForm").reset();
@@ -381,6 +386,9 @@ if (document.getElementById("showPast")) {
 }
 if (document.getElementById("showFull")) {
   document.getElementById("showFull").onchange = render;
+}
+if (document.getElementById("refreshBtn")) {
+  document.getElementById("refreshBtn").onclick = function () { loadGames(); };
 }
 document.getElementById("filterSystem").onchange = render;
 document.getElementById("filterMiles").onchange = render;
