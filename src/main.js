@@ -691,3 +691,28 @@ document.getElementById("reportList") && document.getElementById("reportList").a
     deleteReport(e.target.getAttribute("data-id"));
   }
 });
+
+
+const dropPage = document.getElementById("dropPage");
+const enterApp = document.getElementById("enterApp");
+if (enterApp && dropPage) {
+  enterApp.onclick = function () {
+    dropPage.classList.add("off");
+    if (window.map && map.invalidateSize) map.invalidateSize();
+  };
+}
+
+
+(function () {
+  var drop = document.getElementById("dropPage");
+  var btn = document.getElementById("enterApp");
+  if (!drop || !btn) return;
+  btn.onclick = function () {
+    drop.classList.add("off");
+    setTimeout(function () {
+      if (typeof map !== "undefined" && map.invalidateSize) {
+        map.invalidateSize();
+      }
+    }, 150);
+  };
+})();

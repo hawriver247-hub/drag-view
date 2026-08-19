@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>D&D Local — library flyer</title>
+  <style>
+    @page { size: letter; margin: 0.6in; }
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      color: #1c1812;
+      max-width: 8in;
+      margin: 0 auto;
+    }
+    h1 { font-size: 34px; margin: 0 0 4px; letter-spacing: 0.02em; }
+    .tag { font-size: 16px; color: #5c4e38; margin: 0 0 18px; }
+    .hero { display: flex; gap: 28px; align-items: center; }
+    img.qr { width: 2.6in; height: 2.6in; border: 8px solid #1c1812; }
+    .url { font-family: system-ui, sans-serif; font-size: 15px; word-break: break-all; }
+    h2 { font-size: 16px; margin: 22px 0 8px; }
+    ol, ul { margin: 0; padding-left: 1.2em; }
+    li { margin: 0.25em 0; }
+    .rules { border-top: 2px solid #1c1812; margin-top: 22px; padding-top: 12px; font-size: 14px; }
+    .foot { margin-top: 16px; font-size: 13px; color: #5c4e38; }
+  </style>
+</head>
+<body>
+  <h1>D&amp;D Local</h1>
+  <p class="tag">Find a table. Host a table. All nearby.</p>
+
+  <div class="hero">
+    <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=https%3A%2F%2Fdrag-view.vercel.app" alt="QR code to D&D Local" />
+    <div>
+      <p><b>Scan with your phone camera.</b></p>
+      <p class="url">https://drag-view.vercel.app</p>
+      <p>Free. No app store. Works in a browser.</p>
+      <p>Search <b>Pittsboro</b>, <b>Siler City</b>, <b>Chapel Hill</b>, or wherever you play.</p>
+    </div>
+  </div>
+
+  <h2>How to use it</h2>
+  <ol>
+    <li>Scan the code or type the link.</li>
+    <li>Create an account and set a name.</li>
+    <li>Search a city, then open a game on the map.</li>
+    <li>Join an open table, or tap <b>Host a game</b> to post yours.</li>
+  </ol>
+
+
+  <div class="rules">
+    <h2>Keep it decent</h2>
+    <ul>
+      <li>Post a store, library, or neighborhood — not a home address.</li>
+      <li>Be clear about system, level, date, and open seats.</li>
+      <li>Mark the table full when it is full. Delete it when it is done.</li>
+      <li>Rate people you actually played with. Don’t be a jerk.</li>
+      <li>Bugs or problems: use the <b>Bugs</b> button on the site.</li>
+    </ul>
+  </div>
+
+  <p class="foot">D&amp;D Local is a community map for in-person games. Not affiliated with Wizards of the Coast.</p>
+</body>
+</html>

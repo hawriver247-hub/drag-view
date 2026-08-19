@@ -107,3 +107,36 @@ form h2 { margin:0; }
   }
   .row { grid-template-columns: 1fr; }
 }
+
+
+#dropPage {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #12100c;
+  color: #f3e6c8;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+#dropPage.off { display: none; }
+.drop-inner { max-width: 28rem; text-align: center; }
+.drop-inner h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); margin: 0 0 0.6rem; }
+.drop-kicker { letter-spacing: 0.16em; text-transform: uppercase; color: #d4a017; font-size: 0.8rem; margin: 0 0 0.4rem; }
+.drop-lead { color: #b8a88a; font-size: 1.05rem; }
+.drop-inner .primary { margin: 1rem 0; min-height: 46px; padding: 0.7rem 1.2rem; font-size: 1rem; }
+.drop-steps { text-align: left; color: #f3e6c8; line-height: 1.6; }
+.drop-fine { color: #b8a88a; font-size: 0.85rem; }
+
+
+#dropPage {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  background: #12100c;
+  color: #f3e6c8;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+#dropPage.off { display: none !important; }
