@@ -112,7 +112,7 @@ function popupHtml(g) {
   return "<h3>" + escapeHtml(g.title) + "</h3>" +
     "<p><b>" + escapeHtml(g.system) + "</b> · " + escapeHtml(g.date) + " " + escapeHtml(g.time) + "</p>" +
     "<p>" + escapeHtml(g.location) + "</p>" +
-    "<p>Levels " + escapeHtml(g.levels || "any") + " · " + g.seats + " seat(s)</p>" +
+    "<p>Levels " + escapeHtml(g.levels || "any") + " · " + g.seats + " seat(s)" + (g.is_full ? " · FULL" : "") + "</p>" +
     "<p>" + escapeHtml(g.notes || "") + "</p>" +
     "<p><b>Join:</b> " + escapeHtml(g.contact) + "</p>";
 }
@@ -128,16 +128,27 @@ function render() {
     markers.push(marker);
     const card = document.createElement("article");
     card.className = "card";
-    card.innerHTML = "<h3>" + escapeHtml(g.title) + "</h3>" +
+    card.innerHTML = "<h3>" + escapeHtml(g.title) + (g.is_full ? " (FULL)" : "") + "</h3>" +
       '<p class="meta">' + escapeHtml(g.system) + " · " + g.distance.toFixed(1) + " mi</p>" +
       "<p>" + escapeHtml(g.date) + " " + escapeHtml(g.time) + " · " + g.seats + " seats</p>" +
       "<p>" + escapeHtml(g.location) + "</p>";
     if (currentUser && g.user_id === currentUser.id) {
-      card.innerHTML += '<p><button type="button" class="delete-game">Delete</button></p>';
+      card.innerHTML += g.is_full
+        ? '<p><button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
+        : '<p><button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
     }
     card.onclick = function (e) {
-      if (e.target && e.target.classList && e.target.classList.contains("delete-game")) {
+      const cls = e.target && e.target.classList;
+      if (cls && cls.contains("delete-game")) {
         deleteGame(g.id);
+        return;
+      }
+      if (cls && cls.contains("full-game")) {
+        toggleFull(g.id, true);
+        return;
+      }
+      if (cls && cls.contains("reopen-game")) {
+        toggleFull(g.id, false);
         return;
       }
       map.setView([g.lat, g.lng], 13);
@@ -159,6 +170,13 @@ async function loadGames() {
   render();
 }
 
+
+
+async function toggleFull(id, isFull) {
+  const { error } = await supabase.from("games").update({ is_full: isFull }).eq("id", id);
+  if (error) return alert(error.message);
+  await loadGames();
+}
 
 async function deleteGame(id) {
   if (!confirm("Delete this game?")) return;
