@@ -17,6 +17,8 @@ async function refreshUser() {
   if (currentUser) {
     label.textContent = currentUser.email;
     authBtn.textContent = "Sign out";
+    const handle = currentUser.email.split("@")[0];
+    supabase.from("profiles").upsert({ id: currentUser.id, display_name: handle });
   } else {
     label.textContent = "";
     authBtn.textContent = "Sign in";
@@ -79,6 +81,7 @@ function escapeHtml(str) {
 
 let games = [];
 let ratings = [];
+let profiles = [];
 let userPos = { lat: 35.7235, lng: -79.4625 };
 let pendingPin = null;
 let markers = [];
@@ -155,9 +158,11 @@ function render() {
       card.innerHTML += g.is_full
         ? '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
         : '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
+      card.innerHTML += rateBlock(g);
     } else if (currentUser && isJoined(g)) {
       const mine = myRatingFor(g.user_id);
       card.innerHTML += '<p><button type="button" class="leave-game">Leave</button></p>';
+      card.innerHTML += rateBlock(g);
       card.innerHTML += '<p class="rate-row">Rate host ' +
         [1,2,3,4,5].map(function (n) {
           return '<button type="button" class="rate-host" data-score="' + n + '">' + (mine >= n ? "★" : "☆") + "</button>";
@@ -167,6 +172,10 @@ function render() {
     }
     card.onclick = function (e) {
       const cls = e.target && e.target.classList;
+      if (cls && cls.contains("rate-person")) {
+        ratePerson(e.target.getAttribute("data-user"), g.id, Number(e.target.getAttribute("data-score")));
+        return;
+      }
       if (cls && cls.contains("rate-host")) {
         ratePerson(g.user_id, g.id, Number(e.target.getAttribute("data-score")));
         return;
@@ -215,6 +224,10 @@ async function loadGames() {
   } else {
     games = data || [];
   }
+  const rateRes = await supabase.from("ratings").select("rater_id, ratee_id, score");
+  ratings = rateRes.data || [];
+  const profRes = await supabase.from("profiles").select("id, display_name");
+  profiles = profRes.data || [];
   render();
 }
 
@@ -223,6 +236,29 @@ async function loadGames() {
 
 
 
+
+function nameOf(userId) {
+  const hit = profiles.find(function (p) { return p.id === userId; });
+  return hit ? hit.display_name : "Player";
+}
+function otherPeople(g) {
+  const ids = {};
+  if (g.user_id) ids[g.user_id] = true;
+  (g.game_players || []).forEach(function (p) { ids[p.user_id] = true; });
+  return Object.keys(ids).filter(function (id) { return currentUser && id !== currentUser.id; });
+}
+function starsHtml(userId) {
+  const mine = myRatingFor(userId);
+  return [1, 2, 3, 4, 5].map(function (n) {
+    return '<button type="button" class="rate-person" data-user="' + userId + '" data-score="' + n + '">' + (mine >= n ? "★" : "☆") + "</button>";
+  }).join("");
+}
+function rateBlock(g) {
+  return otherPeople(g).map(function (id) {
+    const tag = id === g.user_id ? " (host)" : "";
+    return "<p>Rate " + escapeHtml(nameOf(id)) + tag + " " + starsHtml(id) + "</p>";
+  }).join("");
+}
 function avgFor(userId) {
   const list = ratings.filter(function (r) { return r.ratee_id === userId; });
   if (!list.length) return null;
