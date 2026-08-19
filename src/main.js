@@ -776,3 +776,45 @@ supabase.auth.onAuthStateChange(function () {
   updateDropAuth();
 });
 updateDropAuth();
+
+
+if (document.getElementById("dropForgot")) {
+  document.getElementById("dropForgot").onclick = async function () {
+    var fd = new FormData(document.getElementById("dropAuth"));
+    var email = String(fd.get("email") || "").trim();
+    if (!email) return alert("Enter your email first.");
+    var { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin
+    });
+    if (error) return alert(error.message);
+    alert("Check your email for a reset link.");
+  };
+}
+
+function showRecoveryForm() {
+  var auth = document.getElementById("dropAuth");
+  var np = document.getElementById("dropNewPass");
+  var enter = document.getElementById("enterApp");
+  if (auth) auth.hidden = true;
+  if (np) np.hidden = false;
+  if (enter) enter.hidden = true;
+}
+
+if (document.getElementById("dropSavePass")) {
+  document.getElementById("dropSavePass").onclick = async function () {
+    var fd = new FormData(document.getElementById("dropNewPass"));
+    var password = String(fd.get("password") || "");
+    if (password.length < 6) return alert("Password must be at least 6 characters.");
+    var { error } = await supabase.auth.updateUser({ password: password });
+    if (error) return alert(error.message);
+    alert("Password saved. You are signed in.");
+    if (document.getElementById("dropNewPass")) document.getElementById("dropNewPass").hidden = true;
+    await refreshUser();
+    if (typeof updateDropAuth === "function") updateDropAuth();
+    if (typeof openMap === "function") openMap();
+  };
+}
+
+supabase.auth.onAuthStateChange(function (event) {
+  if (event === "PASSWORD_RECOVERY") showRecoveryForm();
+});
