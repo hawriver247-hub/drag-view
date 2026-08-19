@@ -6,6 +6,7 @@ const supabase = createClient(
 );
 
 let currentUser = null;
+let editingId = null;
 
 async function refreshUser() {
   const { data } = await supabase.auth.getUser();
@@ -134,11 +135,15 @@ function render() {
       "<p>" + escapeHtml(g.location) + "</p>";
     if (currentUser && g.user_id === currentUser.id) {
       card.innerHTML += g.is_full
-        ? '<p><button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
-        : '<p><button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
+        ? '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
+        : '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
     }
     card.onclick = function (e) {
       const cls = e.target && e.target.classList;
+      if (cls && cls.contains("edit-game")) {
+        startEdit(g);
+        return;
+      }
       if (cls && cls.contains("delete-game")) {
         deleteGame(g.id);
         return;
@@ -171,6 +176,26 @@ async function loadGames() {
 }
 
 
+
+
+function startEdit(g) {
+  editingId = g.id;
+  const f = document.getElementById("hostForm");
+  f.title.value = g.title || "";
+  f.system.value = g.system || "5e";
+  f.date.value = String(g.date || "").slice(0, 10);
+  f.time.value = g.time || "";
+  f.levels.value = g.levels || "";
+  f.seats.value = g.seats || 3;
+  f.location.value = g.location || "";
+  f.lat.value = g.lat;
+  f.lng.value = g.lng;
+  f.contact.value = g.contact || "";
+  f.notes.value = g.notes || "";
+  if (pendingPin) pendingPin.remove();
+  pendingPin = L.marker([g.lat, g.lng]).addTo(map);
+  dialog.show();
+}
 
 async function toggleFull(id, isFull) {
   const { error } = await supabase.from("games").update({ is_full: isFull }).eq("id", id);
@@ -221,6 +246,7 @@ document.getElementById("hostBtn").onclick = function () {
     authDialog.show();
     return;
   }
+  editingId = null;
   pendingPin = null;
   form.reset();
   document.getElementById("latInput").value = "";
@@ -261,11 +287,21 @@ form.addEventListener("submit", async function (e) {
     notes: data.notes,
     user_id: currentUser.id
   };
-  const { error } = await supabase.from("games").insert(row);
+  let error;
+  if (editingId) {
+    const upd = Object.assign({}, row);
+    delete upd.user_id;
+    const res = await supabase.from("games").update(upd).eq("id", editingId);
+    error = res.error;
+  } else {
+    const res = await supabase.from("games").insert(row);
+    error = res.error;
+  }
   if (error) {
-    alert("Could not post: " + error.message);
+    alert("Could not save: " + error.message);
     return;
   }
+  editingId = null;
   if (pendingPin) pendingPin.remove();
   dialog.close();
   await loadGames();
