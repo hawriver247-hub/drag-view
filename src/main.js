@@ -113,7 +113,7 @@ function filteredGames() {
   const showFull = document.getElementById("showFull") && document.getElementById("showFull").checked;
   return games
     .filter(function (g) { return !system || g.system === system; })
-    .filter(function (g) { return showFull || !g.is_full; })
+    .filter(function (g) { return showFull || !g.is_full || isJoined(g); })
     .map(function (g) { return Object.assign({}, g, { distance: milesBetween(userPos, g) }); })
     .filter(function (g) { return g.distance <= miles; })
     .sort(function (a, b) { return a.distance - b.distance; });
@@ -141,15 +141,27 @@ function render() {
     card.className = "card";
     card.innerHTML = "<h3>" + escapeHtml(g.title) + (g.is_full ? " (FULL)" : "") + "</h3>" +
       '<p class="meta">' + escapeHtml(g.system) + " · " + g.distance.toFixed(1) + " mi</p>" +
-      "<p>" + escapeHtml(g.date) + " " + escapeHtml(g.time) + " · " + g.seats + " seats</p>" +
+      "<p>" + escapeHtml(g.date) + " " + escapeHtml(g.time) + " · " + playerCount(g) + "/" + g.seats + " seats" + (isJoined(g) ? " · Joined" : "") + "</p>" +
       "<p>" + escapeHtml(g.location) + "</p>";
     if (currentUser && g.user_id === currentUser.id) {
       card.innerHTML += g.is_full
         ? '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
         : '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
+    } else if (currentUser && isJoined(g)) {
+      card.innerHTML += '<p><button type="button" class="leave-game">Leave</button></p>';
+    } else if (!g.is_full) {
+      card.innerHTML += '<p><button type="button" class="join-game">Join</button></p>';
     }
     card.onclick = function (e) {
       const cls = e.target && e.target.classList;
+      if (cls && cls.contains("join-game")) {
+        joinGame(g.id);
+        return;
+      }
+      if (cls && cls.contains("leave-game")) {
+        leaveGame(g.id);
+        return;
+      }
       if (cls && cls.contains("edit-game")) {
         startEdit(g);
         return;
@@ -174,7 +186,7 @@ function render() {
 }
 
 async function loadGames() {
-  let query = supabase.from("games").select("*").order("date");
+  let query = supabase.from("games").select("*, game_players(user_id)").order("date");
   const showPastEl = document.getElementById("showPast");
   const showPast = showPastEl && showPastEl.checked;
   if (!showPast) query = query.gte("date", todayStr());
@@ -191,6 +203,37 @@ async function loadGames() {
 
 
 
+
+
+function isJoined(g) {
+  if (!currentUser) return false;
+  if (g.user_id === currentUser.id) return true;
+  return (g.game_players || []).some(function (p) { return p.user_id === currentUser.id; });
+}
+
+function playerCount(g) {
+  const ids = {};
+  if (g.user_id) ids[g.user_id] = true;
+  (g.game_players || []).forEach(function (p) { ids[p.user_id] = true; });
+  return Object.keys(ids).length;
+}
+
+async function joinGame(id) {
+  if (!currentUser) {
+    authDialog.show();
+    return;
+  }
+  const { error } = await supabase.from("game_players").insert({ game_id: id, user_id: currentUser.id });
+  if (error) return alert(error.message);
+  await loadGames();
+}
+
+async function leaveGame(id) {
+  if (!currentUser) return;
+  const { error } = await supabase.from("game_players").delete().eq("game_id", id).eq("user_id", currentUser.id);
+  if (error) return alert(error.message);
+  await loadGames();
+}
 
 function startEdit(g) {
   editingId = g.id;
@@ -308,8 +351,11 @@ form.addEventListener("submit", async function (e) {
     const res = await supabase.from("games").update(upd).eq("id", editingId);
     error = res.error;
   } else {
-    const res = await supabase.from("games").insert(row);
+    const res = await supabase.from("games").insert(row).select("id").single();
     error = res.error;
+    if (!error && res.data) {
+      await supabase.from("game_players").insert({ game_id: res.data.id, user_id: currentUser.id });
+    }
   }
   if (error) {
     alert("Could not save: " + error.message);
