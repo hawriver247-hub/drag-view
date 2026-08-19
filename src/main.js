@@ -78,6 +78,7 @@ function escapeHtml(str) {
 }
 
 let games = [];
+let ratings = [];
 let userPos = { lat: 35.7235, lng: -79.4625 };
 let pendingPin = null;
 let markers = [];
@@ -144,8 +145,10 @@ function render() {
     markers.push(marker);
     const card = document.createElement("article");
     card.className = "card";
+        const hostRate = avgFor(g.user_id);
+    const rateText = hostRate ? (" · " + hostRate.avg.toFixed(1) + "★ (" + hostRate.n + ")") : "";
     card.innerHTML = "<h3>" + escapeHtml(g.title) + (g.is_full ? " (FULL)" : "") + "</h3>" +
-      '<p class="meta">' + escapeHtml(g.system) + " · " + g.distance.toFixed(1) + " mi</p>" +
+      '<p class="meta">' + escapeHtml(g.system) + " · " + g.distance.toFixed(1) + " mi" + rateText + "</p>" +
       "<p>" + escapeHtml(g.date) + " " + escapeHtml(g.time) + " · " + playerCount(g) + "/" + g.seats + " seats" + (isJoined(g) ? " · Joined" : "") + "</p>" +
       "<p>" + escapeHtml(g.location) + "</p>";
     if (currentUser && g.user_id === currentUser.id) {
@@ -153,12 +156,21 @@ function render() {
         ? '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="reopen-game">Reopen</button> <button type="button" class="delete-game">Delete</button></p>'
         : '<p><button type="button" class="edit-game">Edit</button> <button type="button" class="full-game">Mark full</button> <button type="button" class="delete-game">Delete</button></p>';
     } else if (currentUser && isJoined(g)) {
+      const mine = myRatingFor(g.user_id);
       card.innerHTML += '<p><button type="button" class="leave-game">Leave</button></p>';
+      card.innerHTML += '<p class="rate-row">Rate host ' +
+        [1,2,3,4,5].map(function (n) {
+          return '<button type="button" class="rate-host" data-score="' + n + '">' + (mine >= n ? "★" : "☆") + "</button>";
+        }).join("") + "</p>";
     } else if (!g.is_full) {
       card.innerHTML += '<p><button type="button" class="join-game">Join</button></p>';
     }
     card.onclick = function (e) {
       const cls = e.target && e.target.classList;
+      if (cls && cls.contains("rate-host")) {
+        ratePerson(g.user_id, g.id, Number(e.target.getAttribute("data-score")));
+        return;
+      }
       if (cls && cls.contains("join-game")) {
         joinGame(g.id);
         return;
@@ -209,6 +221,37 @@ async function loadGames() {
 
 
 
+
+
+function avgFor(userId) {
+  const list = ratings.filter(function (r) { return r.ratee_id === userId; });
+  if (!list.length) return null;
+  let sum = 0;
+  list.forEach(function (r) { sum += r.score; });
+  return { avg: sum / list.length, n: list.length };
+}
+
+function myRatingFor(userId) {
+  if (!currentUser) return 0;
+  const hit = ratings.find(function (r) { return r.rater_id === currentUser.id && r.ratee_id === userId; });
+  return hit ? hit.score : 0;
+}
+
+async function ratePerson(userId, gameId, score) {
+  if (!currentUser) {
+    authDialog.show();
+    return;
+  }
+  if (userId === currentUser.id) return alert("You cannot rate yourself.");
+  const { error } = await supabase.from("ratings").upsert({
+    rater_id: currentUser.id,
+    ratee_id: userId,
+    game_id: gameId,
+    score: score
+  });
+  if (error) return alert(error.message);
+  await loadGames();
+}
 
 function isJoined(g) {
   if (!currentUser) return false;
