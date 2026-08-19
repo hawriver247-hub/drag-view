@@ -716,3 +716,63 @@ if (enterApp && dropPage) {
     }, 150);
   };
 })();
+
+
+function openMap() {
+  var drop = document.getElementById("dropPage");
+  if (drop) drop.classList.add("off");
+  setTimeout(function () {
+    if (typeof map !== "undefined" && map.invalidateSize) map.invalidateSize();
+  }, 150);
+}
+
+function updateDropAuth() {
+  var enter = document.getElementById("enterApp");
+  var form = document.getElementById("dropAuth");
+  var who = document.getElementById("dropUser");
+  if (!enter) return;
+  if (currentUser) {
+    if (form) form.hidden = true;
+    enter.hidden = false;
+    if (who) who.textContent = "Signed in as " + (currentUser.email || "");
+  } else {
+    if (form) form.hidden = false;
+    enter.hidden = true;
+    if (who) who.textContent = "";
+  }
+}
+
+var dropSignIn = document.getElementById("dropSignIn");
+var dropSignUp = document.getElementById("dropSignUp");
+if (dropSignIn) {
+  dropSignIn.onclick = async function () {
+    var fd = new FormData(document.getElementById("dropAuth"));
+    var { error } = await supabase.auth.signInWithPassword({
+      email: String(fd.get("email") || ""),
+      password: String(fd.get("password") || "")
+    });
+    if (error) return alert(error.message);
+    await refreshUser();
+    updateDropAuth();
+    openMap();
+  };
+}
+if (dropSignUp) {
+  dropSignUp.onclick = async function () {
+    var fd = new FormData(document.getElementById("dropAuth"));
+    var { error } = await supabase.auth.signUp({
+      email: String(fd.get("email") || ""),
+      password: String(fd.get("password") || "")
+    });
+    if (error) return alert(error.message);
+    alert("Account created. Sign in.");
+  };
+}
+if (document.getElementById("enterApp")) {
+  document.getElementById("enterApp").onclick = openMap;
+}
+
+supabase.auth.onAuthStateChange(function () {
+  updateDropAuth();
+});
+updateDropAuth();

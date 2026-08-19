@@ -140,3 +140,6 @@ form h2 { margin:0; }
   padding: 1.5rem;
 }
 #dropPage.off { display: none !important; }
+
+.drop-auth { display:grid; gap:.55rem; margin: 1rem 0; text-align:left; }
+.drop-auth input { width:100%; }
