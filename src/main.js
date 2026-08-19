@@ -68,7 +68,7 @@ document.getElementById("signUpBtn").onclick = async function () {
     password: String(fd.get("password"))
   });
   if (error) return alert(error.message);
-  alert("Account created. Sign in.");
+  alert("Account created. Check your email and confirm, then sign in.");
 };
 
 
@@ -791,7 +791,7 @@ if (dropSignUp) {
       password: String(fd.get("password") || "")
     });
     if (error) return alert(error.message);
-    alert("Account created. Sign in.");
+    alert("Account created. Check your email and confirm, then sign in.");
   };
 }
 if (document.getElementById("enterApp")) {
@@ -871,3 +871,15 @@ document.addEventListener("click", function (e) {
     toggleComplete(g.id, false);
   }
 });
+
+
+if (document.getElementById("dropResend")) {
+  document.getElementById("dropResend").onclick = async function () {
+    var fd = new FormData(document.getElementById("dropAuth"));
+    var email = String(fd.get("email") || "").trim();
+    if (!email) return alert("Enter your email first.");
+    var { error } = await supabase.auth.resend({ type: "signup", email: email });
+    if (error) return alert(error.message);
+    alert("Confirmation email sent. Check spam too.");
+  };
+}
