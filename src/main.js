@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
+  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage } },
   { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
@@ -938,3 +939,19 @@ document.addEventListener("click", function (e) {
   if (el.classList.contains("admin-ban-target")) adminBanFromReport(el.getAttribute("data-user"));
   if (el.classList.contains("admin-delete-listed")) deleteGame(el.getAttribute("data-game"));
 });
+
+
+async function bootAuth() {
+  const { data } = await supabase.auth.getSession();
+  currentUser = data.session ? data.session.user : null;
+  if (typeof refreshUser === "function") await refreshUser();
+  if (typeof updateDropAuth === "function") updateDropAuth();
+  if (currentUser && document.getElementById("dropPage")) {
+    // stay signed in; they can still open the map
+    const enter = document.getElementById("enterApp");
+    const form = document.getElementById("dropAuth");
+    if (form) form.hidden = true;
+    if (enter) enter.hidden = false;
+  }
+}
+bootAuth();
