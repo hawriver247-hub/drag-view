@@ -19,7 +19,9 @@
 
     <section id="dropPage">
       <div class="drop-inner">
-        <p class="drop-kicker">Local tables</p>
+        <p class="drop-kicker">Local tables
+          <button type="button" id="dropHelp" class="drop-help" title="How this works">!</button>
+        </p>
         <h1>D&amp;D Local</h1>
         <p class="drop-lead">Find a game near you. Host one. Join one. Sign in first.</p>
         <form id="dropAuth" class="drop-auth">
@@ -212,5 +214,46 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="/src/main.js"></script>
+  
+    <div id="tutorial" hidden>
+      <div class="tut-card">
+        <p class="tut-step" id="tutStep"></p>
+        <div class="tut-actions">
+          <button type="button" id="tutSkip">Skip</button>
+          <button type="button" id="tutNext" class="primary">Next</button>
+        </div>
+      </div>
+    </div>
+
+  
+    <div id="tour" hidden>
+      <div class="tour-fake">
+        <div class="tour-top">
+          <b>D&amp;D Local</b>
+          <span id="spotAuth" class="tour-spot">Sign in</span>
+          <span id="spotHost" class="tour-spot">Host a game</span>
+        </div>
+        <div class="tour-body">
+          <aside class="tour-side">
+            <div id="spotSearch" class="tour-spot tour-search">City or game search</div>
+            <div id="spotCard" class="tour-spot tour-card">
+              <b>Friday one-shot</b>
+              <span>5e · 3 seats · Join</span>
+            </div>
+          </aside>
+          <div class="tour-map">
+            <div id="spotPin" class="tour-spot tour-pin">d</div>
+          </div>
+        </div>
+      </div>
+      <div id="tourTip">
+        <p id="tourText"></p>
+        <div class="tut-actions">
+          <button type="button" id="tourSkip">Close</button>
+          <button type="button" id="tourNext" class="primary">Next</button>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

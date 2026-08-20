@@ -153,3 +153,97 @@ form h2 { margin:0; }
   font-size: 1rem;
 }
 .drop-beta b { color: #d4a017; }
+
+#tutorial {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,.62);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+#tutorial[hidden] { display: none !important; }
+.tut-card {
+  background: #1c1812;
+  color: #f3e6c8;
+  border: 1px solid #3a3226;
+  max-width: 22rem;
+  padding: 1.1rem 1.2rem;
+}
+.tut-step { margin: 0 0 1rem; line-height: 1.45; }
+.tut-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+
+.drop-help {
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin-left: .4rem;
+  border-radius: 50%;
+  border: 1px solid #d4a017;
+  background: #2a140f;
+  color: #d4a017;
+  font-weight: 700;
+  min-height: 1.6rem !important;
+  padding: 0;
+  vertical-align: middle;
+}
+#tour {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: #12100c;
+  display: flex;
+  flex-direction: column;
+}
+#tour[hidden] { display: none !important; }
+.tour-fake { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.tour-top {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  padding: .6rem .8rem;
+  background: #16130f;
+  border-bottom: 1px solid #3a3226;
+}
+.tour-top b { margin-right: auto; }
+.tour-body { display: grid; grid-template-columns: 220px 1fr; flex: 1; min-height: 0; }
+.tour-side { padding: .7rem; border-right: 1px solid #3a3226; }
+.tour-search, .tour-card {
+  display: block;
+  margin: .5rem 0;
+  padding: .5rem .6rem;
+  background: #1c1812;
+  border: 1px solid #3a3226;
+}
+.tour-card span { display: block; color: #b8a88a; font-size: .8rem; }
+.tour-map {
+  position: relative;
+  background: #1a2330;
+  background-image:
+    linear-gradient(#2a3a2a 1px, transparent 1px),
+    linear-gradient(90deg, #2a3a2a 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.tour-pin {
+  position: absolute;
+  left: 55%;
+  top: 42%;
+  font-size: 1.6rem;
+}
+.tour-spot { border-radius: 6px; }
+.tour-spot.on {
+  outline: 3px solid #d4a017;
+  box-shadow: 0 0 0 6px rgba(212,160,23,.25);
+}
+#tourTip {
+  background: #1c1812;
+  border-top: 1px solid #3a3226;
+  padding: .9rem 1rem 1rem;
+}
+#tourTip p { margin: 0 0 .8rem; }
+@media (max-width: 800px) {
+  .tour-body { grid-template-columns: 1fr; }
+  .tour-map { min-height: 38vh; }
+}
