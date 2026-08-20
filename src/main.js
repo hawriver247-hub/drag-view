@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage } },
   { auth: { persistSession: true, autoRefreshToken: true } }
 );
 
@@ -112,10 +111,10 @@ const youIcon = L.divIcon({
   iconSize: [14, 14]
 });
 const gameIcon = L.divIcon({
-  className: "",
-  html: '<div style="font-size:22px;line-height:22px">d</div>',
-  iconSize: [22, 22],
-  iconAnchor: [11, 11]
+  className: "game-pin",
+  html: '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="14" fill="#111" stroke="#d4a017" stroke-width="2"/><rect x="12.5" y="4" width="5" height="3.5" rx="1" fill="#f3e6c8"/><rect x="12.5" y="22.5" width="5" height="3.5" rx="1" fill="#f3e6c8"/><ellipse cx="15" cy="15" rx="7" ry="5.5" fill="#c23b22"/></svg>',
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
 });
 
 const youMarker = L.marker([userPos.lat, userPos.lng], { icon: youIcon }).addTo(map).bindPopup("You (approx)");
@@ -939,125 +938,3 @@ document.addEventListener("click", function (e) {
   if (el.classList.contains("admin-ban-target")) adminBanFromReport(el.getAttribute("data-user"));
   if (el.classList.contains("admin-delete-listed")) deleteGame(el.getAttribute("data-game"));
 });
-
-
-async function bootAuth() {
-  const { data } = await supabase.auth.getSession();
-  currentUser = data.session ? data.session.user : null;
-  if (typeof refreshUser === "function") await refreshUser();
-  if (typeof updateDropAuth === "function") updateDropAuth();
-  if (currentUser && document.getElementById("dropPage")) {
-    // stay signed in; they can still open the map
-    const enter = document.getElementById("enterApp");
-    const form = document.getElementById("dropAuth");
-    if (form) form.hidden = true;
-    if (enter) enter.hidden = false;
-  }
-}
-bootAuth();
-
-
-const tutSteps = [
-  "Welcome to D&D Local. This map is for in-person tables near you.",
-  "Sign in and set a name. Beta accounts stay free for current features.",
-  "Search a city, a game title, or a player. Open a pin to see seats and how to join.",
-  "Host a game with a library, shop, or neighborhood — not a house address. Click the map to drop the pin.",
-  "Join a table, rate people you sat with, and mark a game complete when it's over."
-];
-let tutIndex = 0;
-
-function showTutorial(force) {
-  const box = document.getElementById("tutorial");
-  const text = document.getElementById("tutStep");
-  if (!box || !text) return;
-  if (!force && localStorage.getItem("dnd_tut_done") === "1") return;
-  tutIndex = 0;
-  text.textContent = tutSteps[0];
-  document.getElementById("tutNext").textContent = "Next";
-  box.hidden = false;
-}
-
-function hideTutorial() {
-  const box = document.getElementById("tutorial");
-  if (box) box.hidden = true;
-  localStorage.setItem("dnd_tut_done", "1");
-}
-
-function nextTutorial() {
-  tutIndex += 1;
-  if (tutIndex >= tutSteps.length) {
-    hideTutorial();
-    return;
-  }
-  document.getElementById("tutStep").textContent = tutSteps[tutIndex];
-  if (tutIndex === tutSteps.length - 1) {
-    document.getElementById("tutNext").textContent = "Done";
-  }
-}
-
-if (document.getElementById("tutSkip")) {
-  document.getElementById("tutSkip").onclick = hideTutorial;
-}
-if (document.getElementById("tutNext")) {
-  document.getElementById("tutNext").onclick = nextTutorial;
-}
-if (document.getElementById("helpBtn")) {
-  document.getElementById("helpBtn").onclick = function () { showTutorial(true); };
-}
-
-showTutorial(false);
-
-
-const tourSteps = [
-  { spot: null, text: "This is the map. Tables show up as pins near you." },
-  { spot: "spotAuth", text: "Sign in here and set a name. Beta accounts stay free for current features." },
-  { spot: "spotSearch", text: "Search a city, a game title, or a player." },
-  { spot: "spotPin", text: "Tap a pin to see the table. When you host, click the real map to drop your pin." },
-  { spot: "spotHost", text: "Host a game. Use a library, shop, or neighborhood — not a house address." },
-  { spot: "spotCard", text: "Join from the list, rate people you sat with, then mark the game complete when it's over." }
-];
-let tourIndex = 0;
-
-function startMapTour() {
-  const tour = document.getElementById("tour");
-  if (!tour) return;
-  tour.hidden = false;
-  tourIndex = 0;
-  renderTourStep();
-}
-
-function endMapTour() {
-  const tour = document.getElementById("tour");
-  if (tour) tour.hidden = true;
-  document.querySelectorAll(".tour-spot.on").forEach(function (el) { el.classList.remove("on"); });
-}
-
-function renderTourStep() {
-  const step = tourSteps[tourIndex];
-  document.querySelectorAll(".tour-spot.on").forEach(function (el) { el.classList.remove("on"); });
-  if (step.spot) {
-    const el = document.getElementById(step.spot);
-    if (el) el.classList.add("on");
-  }
-  const text = document.getElementById("tourText");
-  const next = document.getElementById("tourNext");
-  if (text) text.textContent = step.text;
-  if (next) next.textContent = tourIndex === tourSteps.length - 1 ? "Done" : "Next";
-}
-
-if (document.getElementById("dropHelp")) {
-  document.getElementById("dropHelp").onclick = startMapTour;
-}
-if (document.getElementById("tourSkip")) {
-  document.getElementById("tourSkip").onclick = endMapTour;
-}
-if (document.getElementById("tourNext")) {
-  document.getElementById("tourNext").onclick = function () {
-    if (tourIndex >= tourSteps.length - 1) {
-      endMapTour();
-      return;
-    }
-    tourIndex += 1;
-    renderTourStep();
-  };
-}
