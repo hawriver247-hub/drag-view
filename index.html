@@ -58,12 +58,17 @@
         </div>
       </div>
       <div class="actions">
-        <span id="userLabel"></span>
+        <div class="more-wrap">
+          <button id="moreBtn" type="button" aria-label="More">•••</button>
+          <div id="moreMenu" class="more-menu">
+            <span id="userLabel"></span>
         <button id="nameBtn" type="button">Set name</button>
         <button id="authBtn" type="button">Sign in</button>
         <button id="reportBtn" type="button">Bugs</button>
         <button id="refreshBtn" type="button">Refresh</button>
         <button id="locateBtn" type="button">Use my location</button>
+          </div>
+        </div>
         <button id="hostBtn" class="primary" type="button">Host a game</button>
       </div>
     </header>
@@ -214,6 +219,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="/src/main.js"></script>
+    <script src="/src/more-menu.js"></script>
   
     <div id="tutorial" hidden>
       <div class="tut-card">
