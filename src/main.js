@@ -771,12 +771,14 @@ function updateDropAuth() {
   var enter = document.getElementById("enterApp");
   var form = document.getElementById("dropAuth");
   var who = document.getElementById("dropUser");
-  if (!enter) return;
   if (currentUser) {
     if (form) form.hidden = true;
-    enter.hidden = false;
+    if (enter) enter.hidden = false;
     if (who) who.textContent = "Signed in as " + (currentUser.email || "");
+    openMap();
   } else {
+    var drop = document.getElementById("dropPage");
+    if (drop) drop.classList.remove("off");
     if (form) form.hidden = false;
     enter.hidden = true;
     if (who) who.textContent = "";
@@ -954,3 +956,22 @@ document.addEventListener("click", function (e) {
   const id = btn.getAttribute("data-id");
   if (id && typeof joinGame === "function") joinGame(id);
 });
+
+
+/* auth-open-map-hook */
+if (typeof supabase !== "undefined" && supabase.auth) {
+  supabase.auth.onAuthStateChange(function (event, session) {
+    if (session && session.user && typeof openMap === "function") {
+      openMap();
+    }
+  });
+}
+
+
+/* force-show-drop */
+setTimeout(function () {
+  if (!currentUser) {
+    var d = document.getElementById("dropPage");
+    if (d) d.classList.remove("off");
+  }
+}, 300);
