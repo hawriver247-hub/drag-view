@@ -164,6 +164,14 @@ function filteredGames() {
     .sort(function (a, b) { return a.distance - b.distance; });
 }
 
+
+function joinBtnHtml(g) {
+  if (!currentUser) return "";
+  if (g.user_id === currentUser.id) return "";
+  if (typeof isJoined === "function" && isJoined(g)) return "";
+  if (g.is_full || g.is_complete) return "";
+  return '<br><button type="button" class="popup-join" data-id="' + g.id + '">Join</button>';
+}
 function popupHtml(g) {
   return "<h3>" + escapeHtml(g.title) + "</h3>" +
     "<p><b>" + escapeHtml(g.system) + "</b> · " + escapeHtml(g.date) + " " + escapeHtml(g.time) + "</p>" +
@@ -180,7 +188,7 @@ function render() {
   const listEl = document.getElementById("gameList");
   listEl.innerHTML = list.length ? "" : '<p class="hint" style="padding:0.5rem">No games in range. Host one.</p>';
   list.forEach(function (g) {
-    const marker = L.marker([g.lat, g.lng], { icon: gameIcon }).addTo(map).bindPopup(popupHtml(g));
+    const marker = L.marker([g.lat, g.lng], { icon: gameIcon }).addTo(map).bindPopup(popupHtml(g) + joinBtnHtml(g));
     markers.push(marker);
     const card = document.createElement("article");
     card.className = "card";
@@ -939,3 +947,10 @@ document.addEventListener("click", function (e) {
   if (el.classList.contains("admin-delete-listed")) deleteGame(el.getAttribute("data-game"));
 });
 import './more-menu.js';
+
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest && e.target.closest("button.popup-join");
+  if (!btn) return;
+  const id = btn.getAttribute("data-id");
+  if (id && typeof joinGame === "function") joinGame(id);
+});

@@ -14,3 +14,14 @@
     if (!e.target.closest(".more-wrap")) menu.classList.remove("open");
   });
 })();
+
+(function () {
+  const btn = document.getElementById("sheetToggle");
+  if (!btn) return;
+  btn.onclick = function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.body.classList.toggle("sheet-closed");
+    btn.textContent = document.body.classList.contains("sheet-closed") ? "▲" : "▼";
+  };
+})();

@@ -366,3 +366,34 @@ form h2 { margin:0; }
   right: 8px !important;
   z-index: 6000 !important;
 }
+
+#sheetToggle { display: none; }
+@media (max-width: 720px) {
+  #sheetToggle {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    left: 50%;
+    bottom: 38%;
+    transform: translateX(-50%);
+    z-index: 4500;
+    width: 52px;
+    height: 32px;
+    border: 1px solid var(--line, #3a3226);
+    border-radius: 999px;
+    background: #16130f;
+    color: var(--ink, #f3e6c8);
+    font-size: 14px;
+  }
+  body.sheet-closed #sheetToggle { bottom: 10px; }
+  body.sheet-closed #sheetToggle::after { content: none; }
+  .sidebar, .panel, #sheet, #gameList, aside {
+    transition: transform 0.25s ease;
+  }
+  body.sheet-closed .sidebar,
+  body.sheet-closed .panel,
+  body.sheet-closed #sheet,
+  body.sheet-closed aside {
+    transform: translateY(calc(100% - 8px));
+  }
+}
