@@ -938,3 +938,4 @@ document.addEventListener("click", function (e) {
   if (el.classList.contains("admin-ban-target")) adminBanFromReport(el.getAttribute("data-user"));
   if (el.classList.contains("admin-delete-listed")) deleteGame(el.getAttribute("data-game"));
 });
+import './more-menu.js';
