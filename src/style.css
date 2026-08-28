@@ -605,3 +605,20 @@ body.signed-in #dropPage {
     bottom: 12px !important;
   }
 }
+
+#dropResend,
+#dropNewPass,
+#dropSavePass,
+#dropNewPass input {
+  display: none !important;
+}
+body.show-forgot #dropResend,
+body.show-forgot #dropSavePass {
+  display: block !important;
+  width: 100%;
+}
+body.show-forgot #dropNewPass,
+body.show-forgot #dropNewPass input {
+  display: block !important;
+  width: 100%;
+}

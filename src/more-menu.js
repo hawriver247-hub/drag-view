@@ -105,3 +105,14 @@
     };
   }
 })();
+
+
+/* dropForgot-toggle */
+(function () {
+  const btn = document.getElementById("dropForgot");
+  if (!btn) return;
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+    document.body.classList.toggle("show-forgot");
+  });
+})();
